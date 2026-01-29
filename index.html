@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Now & Next - Live Schedule</title>
+    <style>
+        :root {
+            --color-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --color-card-bg: #ffffff;
+            --color-header-bg: #f8f9fa;
+            --color-border: #e1e8ed;
+            --color-text-primary: #1a202c;
+            --color-text-secondary: #4a5568;
+            --color-text-muted: #718096;
+            --color-now: #48bb78;
+            --color-next: #4299e1;
+            --color-break: #a0aec0;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.15);
+            --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        body {
+            font-family: var(--font-main);
+            background: var(--color-bg);
+            color: var(--color-text-primary);
+            display: flex;
+            flex-direction: column;
+            padding: 0.8vh 1.2vh;
+        }
+
+        /* Header */
+        #header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.8vh;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 1.5vh 2.5vh;
+            box-shadow: var(--shadow-lg);
+            flex-shrink: 0;
+            height: auto;
+        }
+
+        #logo-container {
+            display: flex;
+            align-items: center;
+            gap: 1.5vh;
+        }
+        
+        #logo-img {
+            height: 5vh;
+            width: auto;
+        }
+
+        #header-text {
+            flex: 1;
+            text-align: center;
+        }
+        
+        h1 {
+            color: var(--color-text-primary);
+            font-size: clamp(1.2rem, 2.8vh, 2.5rem);
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        #clock-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.5vh;
+        }
+
+        #clock {
+            font-size: clamp(0.9rem, 2vh, 1.8rem);
+            color: var(--color-text-secondary);
+            font-weight: 600;
+        }
+
+        #week-display {
+            font-size: clamp(0.7rem, 1.5vh, 1.3rem);
+            font-weight: 600;
+            color: var(--color-text-muted);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 0.5vh 1.2vh;
+            border-radius: 20px;
+            color: white;
+        }
+        
+        /* Main container */
+        #nowNextView {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            min-height: 0;
+        }
+        
+        #now-next-container {
+            display: grid;
+            gap: 1vh;
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            padding: 0.5vh;
+        }
+        
+        /* Scrollbar styling */
+        #now-next-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        #now-next-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        
+        #now-next-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+        }
+        
+        #now-next-container::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+        
+        /* Class cards */
+        .class-card {
+            background: var(--color-card-bg);
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            position: relative;
+        }
+        
+        .class-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .class-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .class-header {
+            padding: 1.5vh 2vh;
+            background: var(--color-header-bg);
+            border-bottom: 2px solid var(--color-border);
+        }
+        
+        .class-header h2 {
+            font-size: clamp(0.95rem, 2.2vh, 2rem);
+            color: var(--color-text-primary);
+            font-weight: 700;
+            letter-spacing: -0.01em;
+        }
+        
+        .class-body {
+            padding: 1.5vh 2vh;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2vh;
+            flex-grow: 1;
+        }
+        
+        /* Event blocks */
+        .event {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8vh;
+        }
+        
+        .event-type {
+            font-weight: 700;
+            font-size: clamp(0.65rem, 1.5vh, 1.3rem);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            padding: 0.5vh 1vh;
+            border-radius: 6px;
+            display: inline-block;
+            width: fit-content;
+        }
+        
+        .event-type.now { 
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+        }
+        
+        .event-type.next { 
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+        }
+        
+        .event-type.break { 
+            background: var(--color-break);
+            color: white;
+        }
+        
+        .event-lessons-single,
+        .event-lessons-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1vh;
+        }
+        
+        .event-lessons-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1vh;
+        }
+        
+        .event-item {
+            background: var(--color-header-bg);
+            padding: 1vh 1.2vh;
+            border-radius: 8px;
+            border-left: 3px solid #667eea;
+            transition: all 0.2s ease;
+        }
+        
+        .event-item:hover {
+            background: #f0f4f8;
+            border-left-width: 4px;
+            transform: translateX(2px);
+        }
+        
+        .event-subject {
+            font-size: clamp(0.8rem, 1.8vh, 1.6rem);
+            font-weight: 600;
+            margin-bottom: 0.3vh;
+            color: var(--color-text-primary);
+            line-height: 1.3;
+        }
+        
+        .event-teacher {
+            font-size: clamp(0.7rem, 1.5vh, 1.3rem);
+            color: var(--color-text-secondary);
+            font-weight: 500;
+        }
+        
+        .event-details {
+            font-size: clamp(0.7rem, 1.5vh, 1.3rem);
+            color: var(--color-text-muted);
+            margin-top: 0.5vh;
+            font-weight: 500;
+        }
+        
+        .event-none {
+            font-size: clamp(0.75rem, 1.6vh, 1.4rem);
+            color: var(--color-text-muted);
+            text-align: center;
+            padding: 2vh;
+            font-style: italic;
+        }
+        
+        /* Dynamic grid layouts */
+        .layout-4 { grid-template-columns: repeat(4, 1fr); }
+        .layout-5 { grid-template-columns: repeat(5, 1fr); }
+        .layout-6 { grid-template-columns: repeat(6, 1fr); }
+        
+        /* Compact mode for smaller screens */
+        @media (max-width: 1400px) {
+            .class-body {
+                padding: 1.2vh 1.5vh;
+                gap: 1.5vh;
+            }
+            
+            .event-item {
+                padding: 0.8vh 1vh;
+            }
+        }
+        
+        /* Loading and error states */
+        .status-message {
+            text-align: center;
+            padding: 4vh;
+            color: white;
+            font-size: clamp(1rem, 2.5vh, 2rem);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            margin: 2vh;
+        }
+        
+        .error-message {
+            background: rgba(239, 68, 68, 0.9);
+        }
+        
+        /* Animation */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .class-card {
+            animation: fadeIn 0.3s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <div id="logo-container">
+            <img id="logo-img" src="ies.ico" alt="Logo" onerror="this.style.display='none'">
+            <h1>Now & Next</h1>
+        </div>
+        <div id="clock-container">
+            <div id="clock">Loading...</div>
+            <div id="week-display">Week --</div>
+        </div>
+    </div>
+
+    <div id="nowNextView">
+        <div id="now-next-container">
+            <div class="status-message">Loading schedule...</div>
+        </div>
+    </div>
+
+    <script>
+        let allLessons = [];
+        const excludedStaff = [];
+
+        function timeToMinutes(timeStr) {
+            const h = parseInt(timeStr.substring(0, 2), 10);
+            const m = parseInt(timeStr.substring(2, 4), 10);
+            return h * 60 + m;
+        }
+
+        function minutesToTime(minutes) {
+            const h = Math.floor(minutes / 60);
+            const m = minutes % 60;
+            return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+        }
+
+        function getWeekNumber(date) {
+            const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+            const dayNum = d.getUTCDay() || 7;
+            d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+            return weekNo;
+        }
+
+        function parseWeekRanges(weekStr) {
+            if (!weekStr || weekStr.trim() === '') return [];
+            const weeks = [];
+            const parts = weekStr.split(',').map(s => s.trim()).filter(s => s);
+            for (const part of parts) {
+                if (part.includes('-')) {
+                    const [start, end] = part.split('-').map(Number);
+                    for (let i = start; i <= end; i++) {
+                        weeks.push(i);
+                    }
+                } else {
+                    weeks.push(Number(part));
+                }
+            }
+            return weeks;
+        }
+
+        function parseLessons(tsv) {
+            const lessons = [];
+            const lines = tsv.trim().split(/[\r\n]+/);
+            
+            if (lines.length < 2) {
+                console.error("No data found");
+                return [];
+            }
+            
+            const headers = lines[0].split('\t').map(h => h.trim());
+            const colIdx = {
+                group: headers.indexOf('group'),
+                subject: headers.indexOf('subject'),
+                day: headers.indexOf('day'),
+                starttime: headers.indexOf('starttime'),
+                length: headers.indexOf('length'),
+                room: headers.indexOf('room'),
+                realweeks: headers.indexOf('realweeks'),
+                teacher: headers.indexOf('teacher')
+            };
+
+            for (const key in colIdx) {
+                if (colIdx[key] === -1) {
+                    console.error(`Missing column: ${key}`);
+                    return [];
+                }
+            }
+            
+            const validDays = ["Mon", "Tue", "Wed", "Thur", "Fri"];
+            
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split('\t');
+                if (values.length < headers.length) continue;
+
+                const teacherStr = values[colIdx.teacher].trim();
+                const teachers = teacherStr.split(',').map(t => t.trim());
+                const isExcluded = teachers.some(teacher => excludedStaff.includes(teacher));
+                if (isExcluded) continue;
+
+                const day = values[colIdx.day].trim();
+                const startTimeStr = values[colIdx.starttime].trim().padStart(4, '0');
+                const length = parseInt(values[colIdx.length], 10);
+                const subject = values[colIdx.subject].trim();
+                const room = values[colIdx.room].trim();
+                
+                if (subject.includes('D46') || room.includes('D46')) continue;
+                if (!validDays.includes(day) || !startTimeStr || length <= 0) continue;
+
+                const startTime = timeToMinutes(startTimeStr);
+                const lessonData = {
+                    subject: subject,
+                    day: day,
+                    room: room,
+                    teacher: teacherStr,
+                    startTime: startTime,
+                    endTime: startTime + length,
+                    startTimeStr: minutesToTime(startTime),
+                    endTimeStr: minutesToTime(startTime + length),
+                    validWeeks: parseWeekRanges(values[colIdx.realweeks])
+                };
+
+                const groups = values[colIdx.group].trim().split(',');
+                for (const g of groups) {
+                    const trimmedGroup = g.trim();
+                    if (trimmedGroup) {
+                        const baseGroup = trimmedGroup.split(':')[0];
+                        lessons.push({ 
+                            ...lessonData, 
+                            group: trimmedGroup,
+                            baseGroup: baseGroup 
+                        });
+                    }
+                }
+            }
+            return lessons;
+        }
+
+        function getLessonsForDay(baseClassName, nowDay, currentWeek) {
+            const dayMap = ["", "Mon", "Tue", "Wed", "Thur", "Fri"];
+            const currentDayStr = dayMap[nowDay];
+            if (!currentDayStr) return [];
+
+            const year = baseClassName.charAt(0);
+            const mainClassRegex = /^[4-9][A-Z]$/;
+
+            const lessons = allLessons.filter(l => {
+                if (l.day !== currentDayStr || !l.validWeeks.includes(currentWeek)) {
+                    return false;
+                }
+                const isForThisClass = l.baseGroup === baseClassName;
+                const isForThisYear = l.group.startsWith(year) && !mainClassRegex.test(l.baseGroup);
+                return (isForThisClass || isForThisYear);
+            });
+            
+            const uniqueLessons = [...new Map(lessons.map(l => [l.group + l.startTime, l])).values()];
+            return uniqueLessons.sort((a, b) => a.startTime - b.startTime);
+        }
+
+        function getNowAndNext(todayLessons, nowMinutes) {
+            const nowLessons = todayLessons.filter(l => 
+                nowMinutes >= l.startTime && nowMinutes < l.endTime
+            );
+
+            let nextLessons = [];
+            let nextStartTime = Infinity;
+            let referenceTime = nowMinutes;
+
+            if (nowLessons.length > 0) {
+                const nowEndTime = Math.max(...nowLessons.map(l => l.endTime));
+                referenceTime = nowEndTime - 1;
+            }
+
+            for (const lesson of todayLessons) {
+                if (lesson.startTime > referenceTime && lesson.startTime < nextStartTime) {
+                    nextStartTime = lesson.startTime;
+                }
+            }
+
+            if (nextStartTime !== Infinity) {
+                nextLessons = todayLessons.filter(l => l.startTime === nextStartTime);
+            }
+
+            return { nowLessons, nextLessons };
+        }
+
+        function createEventBlockHTML(lessons, type) {
+            const typeClass = type.toLowerCase();
+
+            if (!lessons || lessons.length === 0) {
+                const subject = (type === 'Now') ? 'Break / Lunch' : 'End of Day';
+                const details = (type === 'Now') ? 'No class scheduled' : 'No more classes';
+                return `
+                    <div class="event">
+                        <div class="event-type break">${type}</div>
+                        <div class="event-none">${subject}<br>${details}</div>
+                    </div>`;
+            }
+
+            const timeDetails = (type === 'Now') 
+                ? `Ends at ${lessons[0].endTimeStr}` 
+                : `Starts at ${lessons[0].startTimeStr}`;
+            
+            const lessonHtml = lessons.map(lesson => {
+                const location = lesson.room ? `(${lesson.room})` : '';
+                const teachers = lesson.teacher.split(',')
+                                    .map(t => t.trim())
+                                    .filter(t => !excludedStaff.includes(t));
+                const teacher = teachers.join(', ');
+                
+                const mainClassRegex = /^[4-9][A-Z]$/;
+                let groupName = '';
+                if (lesson.group.includes(':')) {
+                    groupName = `[${lesson.group.split(':')[1]}] `;
+                } else if (!mainClassRegex.test(lesson.baseGroup)) {
+                    groupName = `[${lesson.baseGroup.substring(1)}] `;
+                }
+
+                return `
+                    <div class="event-item">
+                        <div class="event-subject">${groupName}${lesson.subject} ${location}</div>
+                        <div class="event-teacher">${teacher}</div>
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <div class="event">
+                    <div class="event-type ${typeClass}">${type}</div>
+                    <div class="event-lessons-grid">
+                        ${lessonHtml}
+                    </div>
+                    <div class="event-details">${timeDetails}</div>
+                </div>
+            `;
+        }
+
+        function updateDashboard() {
+            const allClassNames = [...new Set(allLessons.map(l => l.baseGroup))]
+                .filter(name => /^[4-9][A-Z]$/.test(name))
+                .sort();
+
+            const nowNextContainer = document.getElementById('now-next-container');
+            nowNextContainer.innerHTML = '';
+            
+            const now = new Date(new Date().toLocaleString("en-US", {timeZone: "Europe/Stockholm"}));
+            const nowDay = now.getDay();
+            const nowMinutes = (now.getHours() * 60) + now.getMinutes();
+            const currentWeek = getWeekNumber(now);
+
+            const clockEl = document.getElementById('clock');
+            const weekEl = document.getElementById('week-display');
+            const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+            
+            clockEl.textContent = `${dayNames[nowDay]}, ${minutesToTime(nowMinutes)}`;
+            weekEl.textContent = `Week ${currentWeek}`;
+
+            if (nowDay === 0 || nowDay === 6) {
+                nowNextContainer.innerHTML = '<div class="status-message">It\'s the weekend! Enjoy your time off.</div>';
+                return;
+            }
+
+            if (allClassNames.length === 0) {
+                nowNextContainer.innerHTML = '<div class="status-message">No classes found in schedule.</div>';
+                return;
+            }
+
+            // Determine optimal grid layout
+            const numClasses = allClassNames.length;
+            let columns = 4;
+            if (numClasses <= 12) columns = 4;
+            else if (numClasses <= 15) columns = 5;
+            else columns = 6;
+            
+            nowNextContainer.classList.add(`layout-${columns}`);
+
+            for (const className of allClassNames) {
+                const todayLessons = getLessonsForDay(className, nowDay, currentWeek);
+                const { nowLessons, nextLessons } = getNowAndNext(todayLessons, nowMinutes);
+                
+                const card = document.createElement('div');
+                card.className = 'class-card';
+                card.innerHTML = `
+                    <div class="class-header"><h2>${className}</h2></div>
+                    <div class="class-body">
+                        ${createEventBlockHTML(nowLessons, 'Now')}
+                        ${createEventBlockHTML(nextLessons, 'Next')}
+                    </div>
+                `;
+                nowNextContainer.appendChild(card);
+            }
+        }
+
+        async function loadDataAndRun() {
+            try {
+                const response = await fetch('Lessons.tsv?cachebust=' + new Date().getTime(), {
+                    cache: 'no-store'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to load Lessons.tsv (Status: ${response.status})`);
+                }
+
+                const buffer = await response.arrayBuffer();
+                const tsvData = new TextDecoder('utf-8').decode(buffer);
+                allLessons = parseLessons(tsvData);
+                
+                if (allLessons.length === 0) {
+                    throw new Error("No lessons found in data file");
+                }
+                
+                updateDashboard();
+                setInterval(updateDashboard, 30000);
+
+            } catch (error) {
+                console.error(error);
+                const container = document.getElementById('now-next-container');
+                container.innerHTML = `
+                    <div class="status-message error-message">
+                        <strong>Error: Could not load schedule</strong><br>
+                        ${error.message}<br>
+                        <small>Make sure Lessons.tsv is in the same directory</small>
+                    </div>`;
+            }
+        }
+
+        window.addEventListener('resize', updateDashboard);
+        loadDataAndRun();
+    </script>
+</body>
+</html>
