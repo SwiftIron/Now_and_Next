@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Now & Next - Live Schedule</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --color-bg: #0f1117;
+            --color-card-bg: #1a1d27;
+            --color-header-bg: #12141c;
+            --color-border: #2a2d3a;
+            --color-text-primary: #e8eaf0;
+            --color-text-secondary: #9ca3b4;
+            --color-text-muted: #6b7280;
+            --color-now: #22c55e;
+            --color-next: #3b82f6;
+            --color-break: #4b5563;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.25);
+            --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.35);
+            --font-main: 'DM Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            --font-mono: 'Space Mono', monospace;
+
+            /* Year group colours */
+            --year4-color: #f59e0b;
+            --year4-bg: rgba(245, 158, 11, 0.12);
+            --year4-border: rgba(245, 158, 11, 0.35);
+
+            --year5-color: #ef4444;
+            --year5-bg: rgba(239, 68, 68, 0.12);
+            --year5-border: rgba(239, 68, 68, 0.35);
+
+            --year6-color: #8b5cf6;
+            --year6-bg: rgba(139, 92, 246, 0.12);
+            --year6-border: rgba(139, 92, 246, 0.35);
+
+            --year7-color: #06b6d4;
+            --year7-bg: rgba(6, 182, 212, 0.12);
+            --year7-border: rgba(6, 182, 212, 0.35);
+
+            --year8-color: #10b981;
+            --year8-bg: rgba(16, 185, 129, 0.12);
+            --year8-border: rgba(16, 185, 129, 0.35);
+
+            --year9-color: #ec4899;
+            --year9-bg: rgba(236, 72, 153, 0.12);
+            --year9-border: rgba(236, 72, 153, 0.35);
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        body {
+            font-family: var(--font-main);
+            background: var(--color-bg);
+            color: var(--color-text-primary);
+            display: flex;
+            flex-direction: column;
+            padding: 0.6vh 0.8vh;
+        }
+
+        /* Header */
+        #header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.6vh;
+            background: var(--color-card-bg);
+            border: 1px solid var(--color-border);
+            border-radius: 10px;
+            padding: 1.2vh 2vh;
+            box-shadow: var(--shadow-md);
+            flex-shrink: 0;
+        }
+
+        #logo-container {
+            display: flex;
+            align-items: center;
+            gap: 1.2vh;
+        }
+        
+        #logo-img {
+            height: 4.5vh;
+            width: auto;
+        }
+
+        #header-text {
+            flex: 1;
+            text-align: center;
+        }
+        
+        h1 {
+            color: var(--color-text-primary);
+            font-family: var(--font-mono);
+            font-size: clamp(1.1rem, 2.5vh, 2.2rem);
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        h1 span.accent {
+            color: #3b82f6;
+        }
+
+        #clock-container {
+            display: flex;
+            align-items: center;
+            gap: 1.2vh;
+        }
+
+        #clock {
+            font-size: clamp(0.85rem, 1.8vh, 1.6rem);
+            color: var(--color-text-secondary);
+            font-weight: 600;
+            font-family: var(--font-mono);
+        }
+
+        #week-display {
+            font-size: clamp(0.7rem, 1.4vh, 1.2rem);
+            font-weight: 700;
+            background: #3b82f6;
+            padding: 0.4vh 1vh;
+            border-radius: 6px;
+            color: white;
+            letter-spacing: 0.03em;
+        }
+
+        /* Year group legend */
+        #year-legend {
+            display: flex;
+            gap: 0.8vh;
+            margin-bottom: 0.5vh;
+            flex-shrink: 0;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4vh;
+            font-size: clamp(0.6rem, 1.2vh, 1rem);
+            font-weight: 700;
+            padding: 0.3vh 0.8vh;
+            border-radius: 5px;
+            letter-spacing: 0.03em;
+        }
+
+        .legend-dot {
+            width: 0.9vh;
+            height: 0.9vh;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        
+        /* Main container */
+        #nowNextView {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            min-height: 0;
+        }
+        
+        #now-next-container {
+            display: grid;
+            gap: 0.6vh;
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            padding: 0.3vh;
+        }
+        
+        /* Scrollbar styling */
+        #now-next-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        #now-next-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        #now-next-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+        }
+        
+        #now-next-container::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+        
+        /* Class cards */
+        .class-card {
+            background: var(--color-card-bg);
+            border-radius: 8px;
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            position: relative;
+            border: 1px solid var(--color-border);
+        }
+        
+        .class-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+        }
+
+        /* Year-specific card top borders */
+        .class-card.year-4::before { background: var(--year4-color); }
+        .class-card.year-5::before { background: var(--year5-color); }
+        .class-card.year-6::before { background: var(--year6-color); }
+        .class-card.year-7::before { background: var(--year7-color); }
+        .class-card.year-8::before { background: var(--year8-color); }
+        .class-card.year-9::before { background: var(--year9-color); }
+
+        .class-card:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .class-header {
+            padding: 0.8vh 1.2vh;
+            border-bottom: 1px solid var(--color-border);
+            display: flex;
+            align-items: center;
+            gap: 0.6vh;
+        }
+
+        /* Year-specific header backgrounds */
+        .class-card.year-4 .class-header { background: var(--year4-bg); }
+        .class-card.year-5 .class-header { background: var(--year5-bg); }
+        .class-card.year-6 .class-header { background: var(--year6-bg); }
+        .class-card.year-7 .class-header { background: var(--year7-bg); }
+        .class-card.year-8 .class-header { background: var(--year8-bg); }
+        .class-card.year-9 .class-header { background: var(--year9-bg); }
+        
+        .class-header h2 {
+            font-size: clamp(0.85rem, 1.9vh, 1.7rem);
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            font-family: var(--font-mono);
+        }
+
+        /* Year-specific header text colours */
+        .class-card.year-4 .class-header h2 { color: var(--year4-color); }
+        .class-card.year-5 .class-header h2 { color: var(--year5-color); }
+        .class-card.year-6 .class-header h2 { color: var(--year6-color); }
+        .class-card.year-7 .class-header h2 { color: var(--year7-color); }
+        .class-card.year-8 .class-header h2 { color: var(--year8-color); }
+        .class-card.year-9 .class-header h2 { color: var(--year9-color); }
+
+        .year-badge {
+            font-size: clamp(0.5rem, 1vh, 0.85rem);
+            font-weight: 700;
+            padding: 0.2vh 0.5vh;
+            border-radius: 4px;
+            letter-spacing: 0.05em;
+            margin-left: auto;
+        }
+
+        .class-card.year-4 .year-badge { background: var(--year4-border); color: var(--year4-color); }
+        .class-card.year-5 .year-badge { background: var(--year5-border); color: var(--year5-color); }
+        .class-card.year-6 .year-badge { background: var(--year6-border); color: var(--year6-color); }
+        .class-card.year-7 .year-badge { background: var(--year7-border); color: var(--year7-color); }
+        .class-card.year-8 .year-badge { background: var(--year8-border); color: var(--year8-color); }
+        .class-card.year-9 .year-badge { background: var(--year9-border); color: var(--year9-color); }
+        
+        .class-body {
+            padding: 0.8vh 1vh;
+            display: flex;
+            flex-direction: column;
+            gap: 0.6vh;
+            flex-grow: 1;
+        }
+        
+        /* Event blocks */
+        .event {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4vh;
+            min-width: 0;
+        }
+
+        .event + .event {
+            border-top: 1px solid var(--color-border);
+            padding-top: 0.6vh;
+        }
+        
+        .event-type {
+            font-weight: 700;
+            font-size: clamp(0.55rem, 1.1vh, 0.95rem);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            padding: 0.3vh 0.6vh;
+            border-radius: 4px;
+            display: inline-block;
+            width: fit-content;
+        }
+        
+        .event-type.now { 
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+        
+        .event-type.next { 
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+        
+        .event-type.break { 
+            background: rgba(75, 85, 99, 0.3);
+            color: #9ca3af;
+            border: 1px solid rgba(75, 85, 99, 0.4);
+        }
+        
+        .event-lessons-single,
+        .event-lessons-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4vh;
+        }
+        
+        .event-lessons-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.4vh;
+        }
+        
+        .event-item {
+            background: rgba(255, 255, 255, 0.04);
+            padding: 0.5vh 0.7vh;
+            border-radius: 5px;
+            border-left: 2px solid #3b82f6;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5vh;
+            min-width: 0;
+        }
+
+        .event-item:hover {
+            background: rgba(255, 255, 255, 0.07);
+        }
+
+        .subject-symbol {
+            font-size: clamp(0.7rem, 1.5vh, 1.3rem);
+            flex-shrink: 0;
+            line-height: 1.2;
+            width: 1.8vh;
+            text-align: center;
+        }
+
+        .event-item-content {
+            min-width: 0;
+            flex: 1;
+        }
+        
+        .event-subject {
+            font-size: clamp(0.6rem, 1.3vh, 1.15rem);
+            font-weight: 600;
+            color: var(--color-text-primary);
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .event-teacher {
+            font-size: clamp(0.5rem, 1.1vh, 0.95rem);
+            color: var(--color-text-muted);
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .event-details {
+            font-size: clamp(0.5rem, 1vh, 0.9rem);
+            color: var(--color-text-muted);
+            margin-top: 0.2vh;
+            font-weight: 500;
+        }
+        
+        .event-none {
+            font-size: clamp(0.6rem, 1.2vh, 1.1rem);
+            color: var(--color-text-muted);
+            text-align: center;
+            padding: 1vh;
+            font-style: italic;
+        }
+
+        /* When there are multiple lessons, make items even more compact */
+        .event-lessons-grid.multi-lesson .event-item {
+            padding: 0.35vh 0.5vh;
+            gap: 0.3vh;
+        }
+
+        .event-lessons-grid.multi-lesson .event-subject {
+            font-size: clamp(0.55rem, 1.15vh, 1rem);
+        }
+
+        .event-lessons-grid.multi-lesson .event-teacher {
+            font-size: clamp(0.45rem, 0.95vh, 0.85rem);
+        }
+
+        .event-lessons-grid.multi-lesson .subject-symbol {
+            font-size: clamp(0.6rem, 1.2vh, 1.1rem);
+            width: 1.4vh;
+        }
+        
+        /* Dynamic grid layouts */
+        .layout-4 { grid-template-columns: repeat(4, 1fr); }
+        .layout-5 { grid-template-columns: repeat(5, 1fr); }
+        .layout-6 { grid-template-columns: repeat(6, 1fr); }
+        
+        @media (max-width: 1400px) {
+            .class-body {
+                padding: 0.6vh 0.8vh;
+                gap: 0.5vh;
+            }
+            
+            .event-item {
+                padding: 0.4vh 0.6vh;
+            }
+        }
+        
+        /* Loading and error states */
+        .status-message {
+            text-align: center;
+            padding: 4vh;
+            color: var(--color-text-secondary);
+            font-size: clamp(1rem, 2.5vh, 2rem);
+            background: var(--color-card-bg);
+            border: 1px solid var(--color-border);
+            border-radius: 10px;
+            margin: 2vh;
+        }
+        
+        .error-message {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+        }
+        
+        /* Animation */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .class-card {
+            animation: fadeIn 0.25s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <div id="logo-container">
+            <img id="logo-img" src="ies.ico" alt="Logo" onerror="this.style.display='none'">
+            <h1>Now <span class="accent">&</span> Next</h1>
+        </div>
+        <div id="clock-container">
+            <div id="clock">Loading...</div>
+            <div id="week-display">Week --</div>
+        </div>
+    </div>
+
+    <div id="year-legend"></div>
+
+    <div id="nowNextView">
+        <div id="now-next-container">
+            <div class="status-message">Loading schedule...</div>
+        </div>
+    </div>
+
+    <script>
+        let allLessons = [];
+        const excludedStaff = [];
+
+        // Subject → Symbol mapping
+        const subjectSymbols = {
+            'Ma':  '➗',
+            'En':  '📖',
+            'Sv':  '✏️',
+            'Sva': '✏️',
+            'Fy':  '⚡',
+            'Ke':  '🧪',
+            'Bi':  '🧬',
+            'NO':  '🔬',
+            'SO':  '🗳️',
+            'Hi':  '🏛️',
+            'Ge':  '🌍',
+            'Sh':  '⚖️',
+            'Re':  '☮️',
+            'Idh': '🏃',
+            'Mu':  '🎵',
+            'Bl':  '🎨',
+            'Sl':  '🔨',
+            'Tk':  '⚙️',
+            'Tex': '🧵',
+            'Hkk': '🍳',
+            'IT':  '💻',
+            'Fr':  '🇫🇷',
+            'Sp':  '🇪🇸',
+            'SpVa':'🇪🇸',
+            'Trä': '🪵',
+            'Tutorial': '📋',
+            'Lunch': '🍽️',
+            'Mentor Day': '📌',
+            'Y4 Break': '☕',
+            'Y5 Break': '☕',
+            'Y6 Break': '☕',
+            'Julavslutning': '🎄',
+            'Skoljoggen': '🏃',
+        };
+
+        function getSubjectSymbol(subject) {
+            if (subjectSymbols[subject]) return subjectSymbols[subject];
+            if (subject.toLowerCase().includes('break')) return '☕';
+            if (subject.toLowerCase().includes('lunch')) return '🍽️';
+            return '📚';
+        }
+
+        // Year group colour config
+        const yearColors = {
+            '4': { label: 'Year 4', color: '#f59e0b' },
+            '5': { label: 'Year 5', color: '#ef4444' },
+            '6': { label: 'Year 6', color: '#8b5cf6' },
+            '7': { label: 'Year 7', color: '#06b6d4' },
+            '8': { label: 'Year 8', color: '#10b981' },
+            '9': { label: 'Year 9', color: '#ec4899' },
+        };
+
+        function timeToMinutes(timeStr) {
+            const h = parseInt(timeStr.substring(0, 2), 10);
+            const m = parseInt(timeStr.substring(2, 4), 10);
+            return h * 60 + m;
+        }
+
+        function minutesToTime(minutes) {
+            const h = Math.floor(minutes / 60);
+            const m = minutes % 60;
+            return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+        }
+
+        function getWeekNumber(date) {
+            const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+            const dayNum = d.getUTCDay() || 7;
+            d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+            return weekNo;
+        }
+
+        function parseWeekRanges(weekStr) {
+            if (!weekStr || weekStr.trim() === '') return [];
+            const weeks = [];
+            const parts = weekStr.split(',').map(s => s.trim()).filter(s => s);
+            for (const part of parts) {
+                if (part.includes('-')) {
+                    const [start, end] = part.split('-').map(Number);
+                    for (let i = start; i <= end; i++) {
+                        weeks.push(i);
+                    }
+                } else {
+                    weeks.push(Number(part));
+                }
+            }
+            return weeks;
+        }
+
+        function parseLessons(tsv) {
+            const lessons = [];
+            const lines = tsv.trim().split(/[\r\n]+/);
+            
+            if (lines.length < 2) {
+                console.error("No data found");
+                return [];
+            }
+            
+            const headers = lines[0].split('\t').map(h => h.trim());
+            const colIdx = {
+                group: headers.indexOf('group'),
+                subject: headers.indexOf('subject'),
+                day: headers.indexOf('day'),
+                starttime: headers.indexOf('starttime'),
+                length: headers.indexOf('length'),
+                room: headers.indexOf('room'),
+                realweeks: headers.indexOf('realweeks'),
+                teacher: headers.indexOf('teacher')
+            };
+
+            for (const key in colIdx) {
+                if (colIdx[key] === -1) {
+                    console.error(`Missing column: ${key}`);
+                    return [];
+                }
+            }
+            
+            const validDays = ["Mon", "Tue", "Wed", "Thur", "Fri"];
+            
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split('\t');
+                if (values.length < headers.length) continue;
+
+                const teacherStr = values[colIdx.teacher].trim();
+                const teachers = teacherStr.split(',').map(t => t.trim());
+                const isExcluded = teachers.some(teacher => excludedStaff.includes(teacher));
+                if (isExcluded) continue;
+
+                const day = values[colIdx.day].trim();
+                const startTimeStr = values[colIdx.starttime].trim().padStart(4, '0');
+                const length = parseInt(values[colIdx.length], 10);
+                const subject = values[colIdx.subject].trim();
+                const room = values[colIdx.room].trim();
+                
+                if (subject.includes('D46') || room.includes('D46')) continue;
+                if (!validDays.includes(day) || !startTimeStr || length <= 0) continue;
+
+                const startTime = timeToMinutes(startTimeStr);
+                const lessonData = {
+                    subject: subject,
+                    day: day,
+                    room: room,
+                    teacher: teacherStr,
+                    startTime: startTime,
+                    endTime: startTime + length,
+                    startTimeStr: minutesToTime(startTime),
+                    endTimeStr: minutesToTime(startTime + length),
+                    validWeeks: parseWeekRanges(values[colIdx.realweeks])
+                };
+
+                const groups = values[colIdx.group].trim().split(',');
+                for (const g of groups) {
+                    const trimmedGroup = g.trim();
+                    if (trimmedGroup) {
+                        const baseGroup = trimmedGroup.split(':')[0];
+                        lessons.push({ 
+                            ...lessonData, 
+                            group: trimmedGroup,
+                            baseGroup: baseGroup 
+                        });
+                    }
+                }
+            }
+            return lessons;
+        }
+
+        function getLessonsForDay(baseClassName, nowDay, currentWeek) {
+            const dayMap = ["", "Mon", "Tue", "Wed", "Thur", "Fri"];
+            const currentDayStr = dayMap[nowDay];
+            if (!currentDayStr) return [];
+
+            const year = baseClassName.charAt(0);
+            const mainClassRegex = /^[4-9][A-Z]$/;
+
+            const lessons = allLessons.filter(l => {
+                if (l.day !== currentDayStr || !l.validWeeks.includes(currentWeek)) {
+                    return false;
+                }
+                const isForThisClass = l.baseGroup === baseClassName;
+                const isForThisYear = l.group.startsWith(year) && !mainClassRegex.test(l.baseGroup);
+                return (isForThisClass || isForThisYear);
+            });
+            
+            const uniqueLessons = [...new Map(lessons.map(l => [l.group + l.startTime, l])).values()];
+            return uniqueLessons.sort((a, b) => a.startTime - b.startTime);
+        }
+
+        function getNowAndNext(todayLessons, nowMinutes) {
+            const nowLessons = todayLessons.filter(l => 
+                nowMinutes >= l.startTime && nowMinutes < l.endTime
+            );
+
+            let nextLessons = [];
+            let nextStartTime = Infinity;
+            let referenceTime = nowMinutes;
+
+            if (nowLessons.length > 0) {
+                const nowEndTime = Math.max(...nowLessons.map(l => l.endTime));
+                referenceTime = nowEndTime - 1;
+            }
+
+            for (const lesson of todayLessons) {
+                if (lesson.startTime > referenceTime && lesson.startTime < nextStartTime) {
+                    nextStartTime = lesson.startTime;
+                }
+            }
+
+            if (nextStartTime !== Infinity) {
+                nextLessons = todayLessons.filter(l => l.startTime === nextStartTime);
+            }
+
+            return { nowLessons, nextLessons };
+        }
+
+        function createEventBlockHTML(lessons, type) {
+            const typeClass = type.toLowerCase();
+
+            if (!lessons || lessons.length === 0) {
+                const subject = (type === 'Now') ? 'Break / Lunch' : 'End of Day';
+                const icon = (type === 'Now') ? '☕' : '🏠';
+                const details = (type === 'Now') ? 'No class scheduled' : 'No more classes';
+                return `
+                    <div class="event">
+                        <div class="event-type break">${type}</div>
+                        <div class="event-none">${icon} ${subject}<br>${details}</div>
+                    </div>`;
+            }
+
+            const timeDetails = (type === 'Now') 
+                ? `Ends ${lessons[0].endTimeStr}` 
+                : `Starts ${lessons[0].startTimeStr}`;
+            
+            const isMulti = lessons.length > 1;
+
+            const lessonHtml = lessons.map(lesson => {
+                const location = lesson.room ? `(${lesson.room})` : '';
+                const teachers = lesson.teacher.split(',')
+                                    .map(t => t.trim())
+                                    .filter(t => !excludedStaff.includes(t));
+                const teacher = teachers.join(', ');
+                
+                const mainClassRegex = /^[4-9][A-Z]$/;
+                let groupName = '';
+                if (lesson.group.includes(':')) {
+                    groupName = `[${lesson.group.split(':')[1]}] `;
+                } else if (!mainClassRegex.test(lesson.baseGroup)) {
+                    groupName = `[${lesson.baseGroup.substring(1)}] `;
+                }
+
+                const symbol = getSubjectSymbol(lesson.subject);
+
+                return `
+                    <div class="event-item">
+                        <span class="subject-symbol">${symbol}</span>
+                        <div class="event-item-content">
+                            <div class="event-subject">${groupName}${lesson.subject} ${location}</div>
+                            <div class="event-teacher">${teacher}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <div class="event">
+                    <div class="event-type ${typeClass}">${type}</div>
+                    <div class="event-lessons-grid ${isMulti ? 'multi-lesson' : ''}">
+                        ${lessonHtml}
+                    </div>
+                    <div class="event-details">${timeDetails}</div>
+                </div>
+            `;
+        }
+
+        function buildYearLegend(activeYears) {
+            const legendEl = document.getElementById('year-legend');
+            legendEl.innerHTML = '';
+            const sortedYears = [...activeYears].sort();
+            for (const y of sortedYears) {
+                const cfg = yearColors[y];
+                if (!cfg) continue;
+                const item = document.createElement('div');
+                item.className = 'legend-item';
+                item.innerHTML = `<span class="legend-dot" style="background:${cfg.color}"></span><span style="color:${cfg.color}">${cfg.label}</span>`;
+                legendEl.appendChild(item);
+            }
+        }
+
+        function updateDashboard() {
+            const allClassNames = [...new Set(allLessons.map(l => l.baseGroup))]
+                .filter(name => /^[4-9][A-Z]$/.test(name))
+                .sort();
+
+            const nowNextContainer = document.getElementById('now-next-container');
+            nowNextContainer.innerHTML = '';
+            // Remove old layout classes
+            nowNextContainer.className = '';
+            
+            const now = new Date(new Date().toLocaleString("en-US", {timeZone: "Europe/Stockholm"}));
+            const nowDay = now.getDay();
+            const nowMinutes = (now.getHours() * 60) + now.getMinutes();
+            const currentWeek = getWeekNumber(now);
+
+            const clockEl = document.getElementById('clock');
+            const weekEl = document.getElementById('week-display');
+            const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+            
+            clockEl.textContent = `${dayNames[nowDay]}, ${minutesToTime(nowMinutes)}`;
+            weekEl.textContent = `Week ${currentWeek}`;
+
+            if (nowDay === 0 || nowDay === 6) {
+                nowNextContainer.innerHTML = '<div class="status-message">It\'s the weekend! Enjoy your time off. 🎉</div>';
+                return;
+            }
+
+            if (allClassNames.length === 0) {
+                nowNextContainer.innerHTML = '<div class="status-message">No classes found in schedule.</div>';
+                return;
+            }
+
+            // Build legend
+            const activeYears = new Set(allClassNames.map(n => n.charAt(0)));
+            buildYearLegend(activeYears);
+
+            // Determine optimal grid layout
+            const numClasses = allClassNames.length;
+            let columns = 4;
+            if (numClasses <= 12) columns = 4;
+            else if (numClasses <= 15) columns = 5;
+            else columns = 6;
+            
+            nowNextContainer.classList.add(`layout-${columns}`);
+
+            for (const className of allClassNames) {
+                const todayLessons = getLessonsForDay(className, nowDay, currentWeek);
+                const { nowLessons, nextLessons } = getNowAndNext(todayLessons, nowMinutes);
+                const yearNum = className.charAt(0);
+                
+                const card = document.createElement('div');
+                card.className = `class-card year-${yearNum}`;
+                card.innerHTML = `
+                    <div class="class-header">
+                        <h2>${className}</h2>
+                        <span class="year-badge">Y${yearNum}</span>
+                    </div>
+                    <div class="class-body">
+                        ${createEventBlockHTML(nowLessons, 'Now')}
+                        ${createEventBlockHTML(nextLessons, 'Next')}
+                    </div>
+                `;
+                nowNextContainer.appendChild(card);
+            }
+        }
+
+        async function loadDataAndRun() {
+            try {
+                const response = await fetch('Lessons.tsv?cachebust=' + new Date().getTime(), {
+                    cache: 'no-store'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to load Lessons.tsv (Status: ${response.status})`);
+                }
+
+                const buffer = await response.arrayBuffer();
+                const tsvData = new TextDecoder('utf-8').decode(buffer);
+                allLessons = parseLessons(tsvData);
+                
+                if (allLessons.length === 0) {
+                    throw new Error("No lessons found in data file");
+                }
+                
+                updateDashboard();
+                setInterval(updateDashboard, 30000);
+
+            } catch (error) {
+                console.error(error);
+                const container = document.getElementById('now-next-container');
+                container.innerHTML = `
+                    <div class="status-message error-message">
+                        <strong>Error: Could not load schedule</strong><br>
+                        ${error.message}<br>
+                        <small>Make sure Lessons.tsv is in the same directory</small>
+                    </div>`;
+            }
+        }
+
+        window.addEventListener('resize', updateDashboard);
+        loadDataAndRun();
+    </script>
+</body>
+</html>
